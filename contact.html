@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="author" content="Aritra Ghosh">
+  <meta property="og:title" content="Contact">
+  <meta property="og:description" content="Contact Aritra Ghosh">
+  <meta property="og:type" content="website">
+  <title>contact</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Form validation styles */
+    input:required, textarea:required {
+      border-left: 3px solid #ff6b6b;
+    }
+
+    input:invalid, textarea:invalid {
+      border-color: #ff6b6b;
+      background-color: rgba(255, 107, 107, 0.1);
+    }
+
+    input:valid, textarea:valid {
+      border-color: #4ecdc4;
+      background-color: rgba(78, 205, 196, 0.1);
+    }
+
+    /* Only show invalid feedback after user interaction */
+    input:placeholder-shown:invalid, textarea:placeholder-shown:invalid {
+      border-color: var(--text-color);
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .char-count {
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+    }
+
+    .char-count.warning {
+      color: #ffd166;
+    }
+
+    .char-count.error {
+      color: #ff6b6b;
+    }
+
+    .flash {
+      animation: flashError 0.3s ease;
+    }
+
+    @keyframes flashError {
+      0%, 100% { background-color: rgba(255, 107, 107, 0.1); }
+      50% { background-color: rgba(255, 107, 107, 0.4); }
+    }
+
+    /* Theme switcher */
+    .theme-switch {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background-color: var(--text-color);
+      color: var(--background-color);
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    .theme-switch-icon {
+      font-size: 1.2rem;
+    }
+
+    /* Hide theme switch if JS is disabled */
+    .no-js .theme-switch {
+      display: none;
+    }
+  </style>
+  <script>
+    // Add no-js class to body and remove it once JS loads
+    document.documentElement.classList.add('no-js');
+    window.addEventListener('DOMContentLoaded', function() {
+      document.documentElement.classList.remove('no-js');
+    });
+  </script>
+</head>
+<body>
+<button class="theme-switch" id="themeSwitch" aria-label="Toggle theme">
+  <span class="theme-switch-icon">☀️</span>
+</button>
+
+<nav>
+  <ul>
+    <li><a href="index.html">home</a></li>
+    <li><a href="projects.html">projects</a></li>
+    <li><a href="thoughts.html">thoughts</a></li>
+    <li><a href="gallery.html">gallery</a></li>
+    <li><a href="contact.html">contact</a></li>
+    <li><a href="resume.pdf" target = "_blank">resume</a></li>
+  </ul>
+</nav>
+<header>
+  <h1 style="text-align: center;">Let's Chat 💬</h1>
+</header>
+<main class="contact-container">
+  <form action="https://httpbin.org/post" method="post" class="contact-form" id="contactForm">
+    <div class="form-group">
+      <label for="name">Name <span class="required">*</span>:</label>
+      <input type="text" id="name" name="name" required
+             minlength="2" maxlength="50"
+             pattern="[A-Za-z\s\-']+"
+             placeholder="Your name">
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email <span class="required">*</span>:</label>
+      <input type="email" id="email" name="email" required
+             placeholder="your.email@example.com">
+    </div>
+
+    <div class="form-group">
+      <label for="comments">Comments <span class="required">*</span>:</label>
+      <textarea id="comments" name="comments" rows="5" required
+                minlength="10" maxlength="500"
+                placeholder="Your message (10-500 characters)"></textarea>
+      <div class="char-count" id="charCount">0/500</div>
+    </div>
+
+    <input type="hidden" name="possible_bot" value="true">
+    <input type="hidden" name="form-errors" id="formErrors" value="">
+
+    <div class="form-group">
+      <button type="submit">Send Message</button>
+    </div>
+
+    <div class="form-messages">
+      <output name="errorMsg" class="error-message" id="errorMsg"></output>
+      <output name="infoMsg" class="info-message" id="infoMsg"></output>
+    </div>
+  </form>
+</main>
+<footer class="social-links">
+  <p>
+    <a href="mailto:a7ghosh@ucsd.edu">email</a>
+    <a href="https://www.linkedin.com/in/ghosh-aritra/">linkedin</a>
+    <a href="https://github.com/arighosh05">github</a>
+  </p>
+</footer>
+
+<script>
+  // Form validation and masking
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contactForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const commentsInput = document.getElementById('comments');
+    const errorMsg = document.getElementById('errorMsg');
+    const infoMsg = document.getElementById('infoMsg');
+    const charCount = document.getElementById('charCount');
+    const formErrorsInput = document.getElementById('formErrors');
+    const themeSwitch = document.getElementById('themeSwitch');
+    const themeSwitchIcon = themeSwitch.querySelector('.theme-switch-icon');
+
+    // Initialize form errors array
+    let form_errors = [];
+
+    // Theme switcher initialization
+    initTheme();
+
+    // Update character count initially
+    updateCharCount();
+
+    // Add input masking for name field
+    nameInput.addEventListener('input', function(e) {
+      const pattern = /[A-Za-z\s\-']+/;
+      const input = e.target.value;
+      const lastChar = input.charAt(input.length - 1);
+
+      // If the last character doesn't match the pattern
+      if (lastChar && !pattern.test(lastChar)) {
+        // Remove the invalid character
+        e.target.value = input.slice(0, -1);
+
+        // Flash the input field
+        flashElement(e.target);
+
+        // Show error message
+        showError(`Invalid character: "${lastChar}" is not allowed in the name field`);
+
+        // Record the error
+        recordError('name', 'invalid_character', `Invalid character: "${lastChar}"`);
+      }
+    });
+
+    // Character counter for comments
+    commentsInput.addEventListener('input', function() {
+      updateCharCount();
+    });
+
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+      // Check and record validity of all fields without preventing submission
+      checkFieldAndRecordErrors(nameInput);
+      checkFieldAndRecordErrors(emailInput);
+      checkFieldAndRecordErrors(commentsInput);
+
+      // Record any empty required fields as errors
+      if (nameInput.value.trim() === '') {
+        recordError('name', 'empty_field', 'Name field is empty');
+      }
+      if (emailInput.value.trim() === '') {
+        recordError('email', 'empty_field', 'Email field is empty');
+      }
+      if (commentsInput.value.trim() === '') {
+        recordError('comments', 'empty_field', 'Comments field is empty');
+      }
+
+      // Check for comments length errors
+      if (commentsInput.value.length < commentsInput.minLength) {
+        recordError('comments', 'too_short', `Comments should be at least ${commentsInput.minLength} characters`);
+      }
+      if (commentsInput.value.length > commentsInput.maxLength) {
+        recordError('comments', 'too_long', `Comments should not exceed ${commentsInput.maxLength} characters`);
+      }
+
+      // If there are errors, show a message but still allow form submission
+      if (form_errors.length > 0) {
+        showError('Form contains errors but will be submitted anyway');
+        infoMsg.textContent = 'Your message has been sent with noted errors';
+      }
+
+      // Add form errors to hidden input as JSON string
+      formErrorsInput.value = JSON.stringify(form_errors);
+    });
+
+    // Individual field validation on blur - record errors but don't prevent submission
+    nameInput.addEventListener('blur', function() {
+      checkFieldAndRecordErrors(this);
+    });
+
+    emailInput.addEventListener('blur', function() {
+      checkFieldAndRecordErrors(this);
+    });
+
+    commentsInput.addEventListener('blur', function() {
+      checkFieldAndRecordErrors(this);
+    });
+
+    // Theme switcher event
+    themeSwitch.addEventListener('click', function() {
+      toggleTheme();
+    });
+
+    // Function to check field validity and record errors without preventing submission
+    function checkFieldAndRecordErrors(field) {
+      if (!field.validity.valid) {
+        let message = '';
+
+        if (field.validity.valueMissing) {
+          message = `${getFieldName(field)} is required`;
+          recordError(field.id, 'missing_value', message);
+        } else if (field.validity.typeMismatch) {
+          message = `Please enter a valid ${getFieldName(field)}`;
+          recordError(field.id, 'type_mismatch', message);
+        } else if (field.validity.tooShort) {
+          message = `${getFieldName(field)} should be at least ${field.minLength} characters`;
+          recordError(field.id, 'too_short', message);
+        } else if (field.validity.tooLong) {
+          message = `${getFieldName(field)} should not exceed ${field.maxLength} characters`;
+          recordError(field.id, 'too_long', message);
+        } else if (field.validity.patternMismatch) {
+          message = `${getFieldName(field)} contains invalid characters`;
+          recordError(field.id, 'pattern_mismatch', message);
+        }
+
+        showError(message);
+        return false;
+      }
+      return true;
+    }
+
+    // Helper function to get field name
+    function getFieldName(field) {
+      switch(field.id) {
+        case 'name': return 'Name';
+        case 'email': return 'Email';
+        case 'comments': return 'Comments';
+        default: return field.name;
+      }
+    }
+
+    // Function to show error message
+    function showError(message) {
+      errorMsg.textContent = message;
+
+      // Clear error message after 5 seconds
+      setTimeout(function() {
+        errorMsg.textContent = '';
+      }, 5000);
+    }
+
+    // Function to flash an element
+    function flashElement(element) {
+      element.classList.add('flash');
+      setTimeout(function() {
+        element.classList.remove('flash');
+      }, 300);
+    }
+
+    // Function to update character count
+    function updateCharCount() {
+      const maxLength = commentsInput.maxLength;
+      const currentLength = commentsInput.value.length;
+      const remaining = maxLength - currentLength;
+
+      charCount.textContent = `${currentLength}/${maxLength}`;
+
+      // Update the style based on remaining characters
+      charCount.classList.remove('warning', 'error');
+
+      if (remaining < 50) {
+        charCount.classList.add('error');
+      } else if (remaining < 100) {
+        charCount.classList.add('warning');
+      }
+    }
+
+    // Function to record errors
+    function recordError(fieldId, errorType, errorMessage) {
+      form_errors.push({
+        field: fieldId,
+        type: errorType,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Theme functions
+    function initTheme() {
+      // Check localStorage for saved theme
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      // Update theme attribute
+      document.documentElement.setAttribute('data-theme', newTheme);
+
+      // Save to localStorage
+      localStorage.setItem('theme', newTheme);
+
+      // Update icon
+      updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      themeSwitchIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Aritra Ghosh">
+    <meta property="og:title" content="portfolio projects">
+    <meta property="og:description" content="portfolio projects contains all projects">
+    <meta property="og:type" content="website">
+    <title>projects</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Theme switcher */
+        .theme-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: var(--text-color);
+            color: var(--background-color);
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .theme-switch-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Hide theme switch if JS is disabled */
+        .no-js .theme-switch {
+            display: none;
+        }
+    </style>
+    <script>
+        // Add no-js class to body and remove it once JS loads
+        document.documentElement.classList.add('no-js');
+        window.addEventListener('DOMContentLoaded', function() {
+            document.documentElement.classList.remove('no-js');
+        });
+    </script>
+</head>
+<body>
+<button class="theme-switch" id="themeSwitch" aria-label="Toggle theme">
+    <span class="theme-switch-icon">☀️</span>
+</button>
+    <nav>
+        <ul>
+            <li><a href="index.html">home</a></li>
+            <li><a href="projects.html">projects</a></li>
+            <li><a href="thoughts.html">thoughts</a></li>
+            <li><a href="gallery.html">gallery</a></li>
+            <li><a href="contact.html">contact</a></li>
+            <li><a href="resume.pdf" target = "_blank">resume</a></li>
+        </ul>
+    </nav>
+    <header class="content-list">
+        <h1>Projects</h1>
+        <nav>
+            <ol>
+                <li><a href="project_1.html">Project 1</a></li>
+                <li>Project 2</li>
+                <li>Project 3</li>
+            </ol>
+        </nav>
+    </header>
+    <main class="social-links">
+        <p><a href="mailto:a7ghosh@ucsd.edu">email</a> <a href="https://www.linkedin.com/in/ghosh-aritra/">linkedin</a> <a href="https://github.com/arighosh05">github</a></p>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeSwitch = document.getElementById('themeSwitch');
+            const themeSwitchIcon = themeSwitch.querySelector('.theme-switch-icon');
+
+            // Initialize theme
+            initTheme();
+
+            // Theme switcher event
+            themeSwitch.addEventListener('click', function() {
+                toggleTheme();
+            });
+
+            // Theme functions
+            function initTheme() {
+                // Check localStorage for saved theme
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    updateThemeIcon(savedTheme);
+                }
+            }
+
+            function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                // Update theme attribute
+                document.documentElement.setAttribute('data-theme', newTheme);
+
+                // Save to localStorage
+                localStorage.setItem('theme', newTheme);
+
+                // Update icon
+                updateThemeIcon(newTheme);
+            }
+
+            function updateThemeIcon(theme) {
+                themeSwitchIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+        });
+    </script>
+</body>
+</html>
